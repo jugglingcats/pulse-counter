@@ -8,7 +8,7 @@ The idea was to use the hardware counters available on the Espruino (STM32F401CD
 
 For the display I'm using an SH1106, a very cheap 128x64 mono screen, which can be updated reasonably quickly using software SPI.
 
-For the limited character set ('XYZ' plus 0-9) I used this bitmap font generator, which is a bit fiddly but does the job: http://www.angelcode.com/products/bmfont.
+For the limited character set ('XYZ' plus 0-9) I used this bitmap font generator, which is a bit fiddly but does the job: http://www.angelcode.com/products/bmfont. Then I used the handy Espruino bitmap converter to turn each character into Javascript: https://www.espruino.com/Image+Converter.
 
 <img src="https://lh3.googleusercontent.com/b3f_fX9SXDC1WkvRYI5_adIGlezd8u8mbum6UB-m0MYSGFnmZYdh34tipWLQSdJTfKjrQqUuv4O7bM7NTIekLadsHk1SjpMb9DuA_XEV1850q4eb00d6FBSzYtV6hj0dglSa-LQ0Y96O4UIg7gOh9Fd6PrOKI3qqVhMvWQRCk4yNFZP1fLjpRCO6bbHBXPVMLM5L5hbvzF4offGM0Mz6AoeDv8QyHtwIhHlMiENSG2-0XmcouscGgf-I5ojj2rLHzLBEYjj2aajP6lILr6jO3xJ6UI9-lTmdqmE5pvwJt9aPRgY3YKt1iGLPxxjIURcuGQHeCJFJlDjX9OGik0UaJ0_QFnWX4XOb9AOjLAAFCw5ujRwvUieKRgrl0HIZixxYDnJlmBMBa9Fp9zirn-4OLiIlA_I8MpwJIhYp2lNRP9SMrPBpE2gnFpQOg9Wz3-a03ISkSH1PgdQAm4128Xo4-_ZL7RkQIXWEMXmxXXj5GQZRfcVq0eLCEtyJ3NDsFcYRyQjqPb4dJWgpDaw6ncDRjRn8MWg_vze9gv4apKglPvszaIm94421M47mRMnPJ-EZuO4vl6LjVbnP3VMndSQMoGdNtZaaas7MXP2C7Q-Zz3t3aIiQ23T6tI0BcTCY7JwHueG-gp71vWpItn-tmXau4vLKRw=w1297-h1289-no" width="200">
 
