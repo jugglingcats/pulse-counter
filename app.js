@@ -1,17 +1,23 @@
 pinMode(B15, 'input_pullup');
+pinMode(B3, 'input_pullup');
+pinMode(B5, 'input_pullup');
+pinMode(B7, 'input_pullup');
 
 var DEFS={
-  TIM1: {
-    base: 0x40010000,
-    pin: A8
-  },
-  TIM3: {
+  X: { // TIM3
     base: 0x40000400,
-    pin: B4
+    dir: B3,
+    step: B4
   },
-  TIM4: {
+  Y: { // TIM4
     base: 0x40000800,
-    pin: B6
+    dir: B5,
+    step: B6
+  },
+  Z: { // TIM1
+    base: 0x40010000,
+    dir: B7,
+    step: A8
   }
 };
 
@@ -43,6 +49,8 @@ function init(tim) {
   }
   const BASE=def.base;
 
+  // general control register
+  var CCR = BASE;
   // slave mode control register
   var SMCR = BASE+0x0008;
   // event generation register
@@ -59,7 +67,9 @@ function init(tim) {
   var ARR = BASE+0x002C;
 
   // enable PWM on A8 (TIM1 CH1)
-  analogWrite(def.pin,0.5,{freq:10});
+  analogWrite(def.step,0.5,{freq:10});
+  // DIR = 1 (count down)
+  poke16(CCR, peek16(CCR) | 0b00010000);
   // CC1E = 0 (Turn channel 1 off)
   poke16(CCER, peek16(CCER) & ~1);
   // CC1S[1:0]=01 (rising edge), IC1F[7:4]=0 (no filter)
@@ -80,14 +90,20 @@ function init(tim) {
   poke16(CNT, 0);
 
   return {
-    get: function() {
+    step: function() {
       var thisPeek=peek16(CNT);
-      if ( thisPeek < lastPeek ) {
+//      if ( thisPeek < lastPeek ) {
         // overflow
-        total+=65536;
-      }
+//        total+=65536;
+//      }
       lastPeek=thisPeek;
       return total + thisPeek;
+    },
+    dir: function() {
+      if ( def.dir ) {
+        return digitalRead(def.dir);
+      }
+      return 0;
     },
     reset: function() {
       lastPeek=0;
@@ -97,41 +113,55 @@ function init(tim) {
   };
 }
 
-function drawCnt(g, lbl, cnt, y) {
+function drawCnt(g, lbl, obj, y) {
   g.drawImage(font[lbl], 0, y);
-  const txt=cnt.toString();
+  const txt=obj.step().toString();
+  const dir=obj.dir();
   const offset=128 - txt.length * 14;
   for (var n=0; n< txt.length; n++) {
     g.drawImage(font[txt.charAt(n)], offset+n*14, y);
   }
+  if ( dir ) {
+    g.fillRect(14, y+12, 14+2, y+12+2);
+  }
 }
+
+const native=E.compiledC(`
+  // void dir(bool)
+  unsigned char *addr=(unsigned char *) 0x40010000;
+  void dir(bool state) {
+    *addr = (*addr & ~0b00010000) | (state * 0b00010000);
+  }
+`);
 
 function onInit() {
   var s = new SPI();
   s.setup({mosi: A6 /* D1 */, sck:A5 /* D0 */});
   var g = require("SH1106").connectSPI(s, B1 /* DC */, A7 /* RST - can leave as undefined */, function() {
-    const TIM1=init("TIM1");
-    const TIM4=init("TIM4");
-    const TIM3=init("TIM3");
+    const Y=init("Y");
+    const X=init("X");
+    const Z=init("Z");
 
     setWatch(function(e) {
-      TIM1.reset();
-      TIM4.reset();
-      TIM3.reset();
+      X.reset();
+      Y.reset();
+      Z.reset();
     }, B15, { repeat: true });
+
+    setWatch(native.dir, B7, {repeat: true, edge: "both", irq: true});
 
     function update(){
       g.clear();
       g.setRotation(2);
 
-      drawCnt(g, "X", TIM3.get(), 0);
-      drawCnt(g, "Y", TIM4.get(), 20);
-      drawCnt(g, "Z", TIM1.get(), 40);
+      drawCnt(g, "X", X, 0);
+      drawCnt(g, "Y", Y, 20);
+      drawCnt(g, "Z", Z, 40);
 
       g.flip(); 
     }
 
-    setInterval(update, 100);
+    setInterval(update, 200);
   });
 }
 
